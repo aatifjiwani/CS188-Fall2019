@@ -86,19 +86,70 @@ def depthFirstSearch(problem):
     print("Is the start a goal?", problem.isGoalState(problem.getStartState()))
     print("Start's successors:", problem.getSuccessors(problem.getStartState()))
     """
-    # visited = []
-    # stackOfNodes = [problem.getStartState]
-    # for node in stackOfNodes:
-    #     curr_node = stackOfNodes.pop()
-    #     if curr_node not in visited:
-    #
-    print("Is the start a goal?", problem.isGoalState(problem.getStartState()))
-    util.raiseNotDefined()
+    visited = []
+    stackOfNodes = util.Stack()
+    stackOfNodes.push( (problem.getStartState(), []) )
+
+    actionsToGoal = None
+
+    while (not stackOfNodes.isEmpty()):
+        curr_node, actions_taken = stackOfNodes.pop()
+
+        if problem.isGoalState(curr_node):
+            return actions_taken
+
+        if curr_node not in visited:
+
+            visited.append(curr_node)
+
+            successors = problem.getSuccessors(curr_node)
+            for child in successors:
+                pos, action, cost = child
+
+                new_actions = actions_taken[:]
+                new_actions.append(action)
+
+                stackOfNodes.push( (pos, new_actions) )
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    visited = []
+    queueOfNodes = util.Queue()
+    queueOfNodes.push( (problem.getStartState(), []) )
+
+    # goalState = None
+    actionsToGoal = None
+    # edgeTo = {}
+    # (5,4): ((4,5), 'WEST')
+
+    while (not queueOfNodes.isEmpty()):
+        curr_node, actions_taken = queueOfNodes.pop()
+
+        if problem.isGoalState(curr_node):
+            actionsToGoal = actions_taken 
+            break
+
+        if curr_node not in visited:
+
+            visited.append(curr_node)
+
+            successors = problem.getSuccessors(curr_node)
+            for child in successors:
+                pos, action, cost = child
+
+                new_actions = actions_taken[:]
+                new_actions.append(action)
+
+                queueOfNodes.push( (pos, new_actions) )
+                
+
+    print("broken!!!")
+
+    print("actions:", actionsToGoal)
+
+
+    return actionsToGoal
 
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
