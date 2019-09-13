@@ -18,6 +18,7 @@ Pacman agents (in searchAgents.py).
 """
 
 import util
+import searchAgents
 
 class SearchProblem:
     """
@@ -127,7 +128,7 @@ def breadthFirstSearch(problem):
         curr_node, actions_taken = queueOfNodes.pop()
 
         if problem.isGoalState(curr_node):
-            actionsToGoal = actions_taken 
+            actionsToGoal = actions_taken
             break
 
         if curr_node not in visited:
@@ -142,7 +143,7 @@ def breadthFirstSearch(problem):
                 new_actions.append(action)
 
                 queueOfNodes.push( (pos, new_actions) )
-                
+
 
     print("broken!!!")
 
@@ -154,7 +155,44 @@ def breadthFirstSearch(problem):
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    visited = []
+    queueOfNodes = util.PriorityQueue()
+    queueOfNodes.push( (problem.getStartState(), []), 0)
+
+    # goalState = None
+    actionsToGoal = None
+    # edgeTo = {}
+    # (5,4): ((4,5), 'WEST')
+
+    while (not queueOfNodes.isEmpty()):
+        curr_node, actions_taken = queueOfNodes.pop()
+
+        if problem.isGoalState(curr_node):
+            actionsToGoal = actions_taken
+            break
+
+        if curr_node not in visited:
+
+            visited.append(curr_node)
+
+            successors = problem.getSuccessors(curr_node)
+            for child in successors:
+                pos, action, cost  = child
+
+                new_actions = actions_taken[:]
+
+                new_actions.append(action)
+
+                queueOfNodes.push( (pos, new_actions), problem.getCostOfActions(new_actions) )
+
+
+    print("broken!!!")
+
+    print("actions:", actionsToGoal)
+
+
+    return actionsToGoal
+
 
 def nullHeuristic(state, problem=None):
     """
@@ -163,11 +201,43 @@ def nullHeuristic(state, problem=None):
     """
     return 0
 
-def aStarSearch(problem, heuristic=nullHeuristic):
-    """Search the node that has the lowest combined cost and heuristic first."""
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
 
+
+
+def aStarSearch(problem, heuristic=nullHeuristic):
+    visited = []
+    queueOfNodes = util.PriorityQueue()
+    start = problem.getStartState()
+    queueOfNodes.push( (start, []), heuristic(start, problem))
+
+    # goalState = None
+    actionsToGoal = None
+    # edgeTo = {}
+    # (5,4): ((4,5), 'WEST')
+
+    while (not queueOfNodes.isEmpty()):
+        curr_node, actions_taken = queueOfNodes.pop()
+
+        if problem.isGoalState(curr_node):
+            actionsToGoal = actions_taken
+            break
+        if curr_node not in visited:
+
+            visited.append(curr_node)
+
+            successors = problem.getSuccessors(curr_node)
+            for child in successors:
+                pos, action, cost  = child
+
+                new_actions = actions_taken[:]
+
+                new_actions.append(action)
+
+                #print("from: ", curr_node, "to: ", pos, "h: ", heuristic(pos, problem))
+
+                queueOfNodes.update( (pos, new_actions), problem.getCostOfActions(new_actions) + heuristic(pos, problem))
+
+    return actionsToGoal
 
 # Abbreviations
 bfs = breadthFirstSearch
