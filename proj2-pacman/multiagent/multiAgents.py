@@ -181,7 +181,7 @@ class MinimaxAgent(MultiAgentSearchAgent):
         """
 
 
-        return self.minmax(0, gameState, 1, None)[1]
+        return self.minmax(0, gameState, 0, None)[1]
     def minmax(self, agentIndex, gameState, depth, action):
 
         if depth >= self.depth or gameState.isWin() or gameState.isLose():
@@ -201,13 +201,15 @@ class MinimaxAgent(MultiAgentSearchAgent):
 
         recursList = []
         for act in legalActions:
-            recursList.append(self.minmax(nextAgentIndex, gameState.generateSuccessor(agentIndex, act), changeddepth, act))
+            recursList.append((self.minmax(nextAgentIndex, gameState.generateSuccessor(agentIndex, act), changeddepth, act)[0], act))
         if (agentIndex == 0):
             bestMove = max(recursList, key=lambda x: x[0])
+
 
             return bestMove
         else:
             bestMove = min(recursList, key=lambda x: x[0])
+
 
             return bestMove
 
@@ -226,12 +228,91 @@ class AlphaBetaAgent(MultiAgentSearchAgent):
     Your minimax agent with alpha-beta pruning (question 3)
     """
 
+    def alphaBetaPruner(self, agentIndex, gameState, depth, action, alpha, beta):
+        if depth >= self.depth or gameState.isWin() or gameState.isLose():
+            return (self.evaluationFunction(gameState), action)
+        numAgents = gameState.getNumAgents()
+        numGhost = numAgents - 1
+
+        legalActions = [action for action in gameState.getLegalActions(agentIndex)]
+        # legalStates = [gameState.generateSuccessor(currAgent, action) for action in legalActions]
+
+        changeddepth = depth
+        if (agentIndex == numAgents - 1):
+            changeddepth = depth + 1
+
+        nextAgentIndex = (agentIndex + 1) % numAgents
+        maxNode = (float('-inf'), None)
+        minNode = (float('inf'), None)
+
+        if (agentIndex == 0):
+            for action in legalActions:
+                recurs = (self.alphaBetaPruner(nextAgentIndex, gameState.generateSuccessor(agentIndex, action), changeddepth, action, alpha, beta)[0], action)
+                # print("beta")
+                # print(maxNode)
+                # print(recurs)
+                maxNode = max([maxNode, recurs], key = lambda x: x[0])
+                if maxNode[0] > beta[0]:
+                    return maxNode
+                alpha = max([alpha, maxNode], key=lambda x: x[0])
+            return maxNode
+        else:
+            for action in legalActions:
+
+                recurs = (self.alphaBetaPruner(nextAgentIndex, gameState.generateSuccessor(agentIndex, action), changeddepth, action, alpha, beta)[0], action)
+                # print("alpha")
+                # print(minNode)
+                # print(recurs)
+
+                minNode = min([minNode, recurs], key = lambda x: x[0])
+                if minNode[0] < alpha[0]:
+                    return minNode
+                beta = min([beta, minNode], key=lambda x: x[0])
+            return minNode
+
+        # if depth >= self.depth or gameState.isWin() or gameState.isLose():
+        #     return self.evaluationFunction(gameState)
+        # numAgents = gameState.getNumAgents()
+        # numGhost = numAgents - 1
+        #
+        # legalActions = gameState.getLegalActions(agentIndex)
+        # changeddepth = depth
+        # if (agentIndex == numAgents - 1):
+        #     changeddepth = depth + 1
+        # nextAgentIndex = (agentIndex + 1) % numAgents
+        # maxNode = float('-inf')
+        # minNode = float('inf')
+        # if (agentIndex == 0): #maximizer
+        #     for action in legalActions:
+        #         successor = gameState.generateSuccessor(agentIndex, action)
+        #         pruned = self.alphaBetaPruner(nextAgentIndex, successor, changeddepth, alpha, beta)
+        #         maxNode = max(maxNode, pruned)
+        #         if maxNode >= beta:
+        #             return maxNode
+        #         alpha = max(alpha, maxNode)
+        #     return maxNode
+        # else:
+        #     for action in legalActions:
+        #         successor = gameState.generateSuccessor(agentIndex, action)
+        #         pruned = self.alphaBetaPruner(nextAgentIndex, successor, changeddepth, alpha, beta)
+        #         minNode = min(minNode, pruned)
+        #         if minNode <= alpha:
+        #             return minNode
+        #         beta = min(beta, minNode)
+        #     return minNode
+
+
+
+
+
     def getAction(self, gameState):
         """
         Returns the minimax action using self.depth and self.evaluationFunction
         """
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        alpha = (float('-inf'), None)
+        beta = (float('inf'), None)
+        return self.alphaBetaPruner(0, gameState, 0, None, alpha, beta)[1]
 
 class ExpectimaxAgent(MultiAgentSearchAgent):
     """
@@ -245,8 +326,47 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         All ghosts should be modeled as choosing uniformly at random from their
         legal moves.
         """
-        "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
+        return self.expectimax(0, gameState, 0, None)[1]
+    def expectimax(self, agentIndex, gameState, depth, action):
+
+        if depth >= self.depth or gameState.isWin() or gameState.isLose():
+            return (self.evaluationFunction(gameState), action)
+        numAgents = gameState.getNumAgents()
+        numGhost = numAgents - 1
+
+        legalActions = [action for action in gameState.getLegalActions(agentIndex)]
+        # legalStates = [gameState.generateSuccessor(currAgent, action) for action in legalActions]
+
+
+
+        changeddepth = depth
+        if (agentIndex == numAgents - 1):
+            changeddepth = depth + 1
+        nextAgentIndex = (agentIndex + 1) % numAgents
+
+        recursList = []
+        for act in legalActions:
+            recursList.append((self.expectimax(nextAgentIndex, gameState.generateSuccessor(agentIndex, act), changeddepth, act)[0], act))
+        if (agentIndex == 0):
+            bestMove = max(recursList, key=lambda x: x[0])
+            print(bestMove)
+            return bestMove
+        else:
+            listOfNums = []
+            for x in recursList:
+                listOfNums.append(x[0])
+            averageMove = sum([x[0] for x in recursList])/len(recursList)
+            return (averageMove, None)
+
+
+
+
+            # depth += 1
+            # minimax(agentIndex++)
+            #agentindices = 0? --> max
+            #else
+            #min
+
 
 def betterEvaluationFunction(currentGameState):
     """
@@ -255,8 +375,62 @@ def betterEvaluationFunction(currentGameState):
 
     DESCRIPTION: <write something here so we know what you did>
     """
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    newPos = currentGameState.getPacmanPosition()
+    newFood = currentGameState.getFood()
+    newGhostStates = currentGameState.getGhostStates()
+    newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
+
+
+    totalScared = sum(newScaredTimes)
+    ghostStates = [x.configuration.getPosition() for x in newGhostStates]
+
+    currX, currY = newPos
+    disttoClosestFood = 0
+    if len(newFood.asList()):
+        closestFood = min(newFood.asList(), key= lambda x: manhattanDistance(x, newPos))
+        disttoClosestFood = manhattanDistance(closestFood, newPos)
+
+    disttoClosestCap = 0
+    if len(newFood.asList()):
+        if (len(currentGameState.getCapsules()) != 0):
+            closestCap = min(currentGameState.getCapsules(), key= lambda x: manhattanDistance(x, newPos))
+            disttoClosestCap = manhattanDistance(closestFood, newPos)
+        else:
+            disttoClosestCap = 0
+
+
+    if (disttoClosestCap >= disttoClosestFood):
+        disttoClosestCap = 0
+    #print("fartest: ", farthestFood)
+
+    # totalDist = 0
+    # for ghost in ghostStates:
+    #     x,y = ghost
+    #     totalDist += math.sqrt(abs(currX-x)**2 +
+    #             abs(currY-y)**2)
+
+    closestGhost = min(ghostStates, key = lambda x: manhattanDistance(x, newPos))
+    disttoClosestGhost = manhattanDistance(closestGhost, newPos)
+    
+    distToFoodList = []
+    for x in newFood.asList():
+        distToFoodList.append(manhattanDistance(x, newPos))
+
+    # sumOfDist = 0
+    # for x in distToFoodList:
+    #     sumOfDist += x
+    # avgFoodDist = sumOfDist/len(distToFoodList)
+    # # totalSum = 0
+    # for elem in ghostStates:
+    #     x,y = elem
+    #     totalSum += math.sqrt(abs(farthestFood[0]-x)**2 +
+    #         abs(farthestFood[1]-y)**2)
+    #
+    # avg = totalSum / len(ghostStates)
+
+    return currentGameState.getScore()  - disttoClosestFood/(len(newFood.asList())+1) + 2*disttoClosestCap
+    + disttoClosestGhost - 5*len(currentGameState.getCapsules())
 
 # Abbreviation
 better = betterEvaluationFunction
