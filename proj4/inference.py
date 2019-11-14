@@ -107,7 +107,7 @@ class DiscreteDistribution(dict):
 
 
         total = self.total()
-        prob = random.random()
+        prob = random.random()*total
         for key in self.keys():
             if prob <= self[key]:
                 return key
@@ -307,6 +307,7 @@ class ExactInference(InferenceModule):
             distribution[pos] = self.beliefs[pos] * probability
         self.beliefs = distribution
         self.beliefs.normalize()
+
     def elapseTime(self, gameState):
         """
         Predict beliefs in response to a time step passing from the current
@@ -317,7 +318,26 @@ class ExactInference(InferenceModule):
         current position is known.
         """
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+        def isValid(pos, inc):
+            newPos = (pos[0] + inc[0], pos[1] + inc[1])
+            return (newPos, newPos in self.allPositions)
+
+        distribution = DiscreteDistribution()
+        increments = [(0,0), (0,1), (0,-1), (1,0), (-1,0)]
+        for pos in self.allPositions:
+            newDist = self.getPositionDistribution(gameState, pos)
+            for newPos in self.allPositions:
+                distribution[newPos] += newDist[newPos]*self.beliefs[pos]
+
+            # for inc in increments:
+            #     newPos, valid = isValid(pos, inc)
+            #     if (valid):
+            #         
+
+        self.beliefs = distribution
+
+
+        
 
     def getBeliefDistribution(self):
         return self.beliefs
@@ -344,7 +364,14 @@ class ParticleFilter(InferenceModule):
         """
         self.particles = []
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+        lengthOfLegalPositions = len(self.legalPositions)
+        currNumParticles = 0
+
+        while (currNumParticles < self.numParticles):
+            self.particles.append( self.legalPositions[currNumParticles % lengthOfLegalPositions] )
+            currNumParticles = currNumParticles + 1
+
+
 
     def observeUpdate(self, observation, gameState):
         """
@@ -359,8 +386,19 @@ class ParticleFilter(InferenceModule):
         the DiscreteDistribution may be useful.
         """
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
-
+        currentBeliefs = self.getBeliefDistribution()
+        newDist = DiscreteDistribution()
+        for particle in self.particles:
+            prob = self.getObservationProb(observation, gameState.getPacmanPosition(), particle, self.getJailPosition())
+            newDist[particle] = prob*currentBeliefs[particle]
+        
+        if (newDist.total() == 0):
+            self.initializeUniformly(gameState)
+        else:
+            self.particles = []
+            for _ in range(self.numParticles):
+                self.particles.append(newDist.sample())
+        
     def elapseTime(self, gameState):
         """
         Sample each particle's next state based on its current state and the
@@ -377,8 +415,12 @@ class ParticleFilter(InferenceModule):
 
         This function should return a normalized distribution.
         """
-        "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+        distribution = DiscreteDistribution()
+        for particle in self.particles:
+            distribution[particle] += 1
+        distribution.normalize()
+        return distribution
+
 
 
 class JointParticleFilter(ParticleFilter):
