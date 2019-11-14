@@ -455,13 +455,13 @@ class JointParticleFilter(ParticleFilter):
         """
         self.particles = []
 
-        a = self.legalPositions
-        b = self.legalPositions
-        product = list(itertools.product(a,b))
+        allPositions = [self.legalPositions for _ in range(self.numGhosts)]
+        product = list(itertools.product(*allPositions))
         random.shuffle(product)
 
-        for i in range(len(product)):
-                print(product[i])
+        for i in range(self.numParticles):
+            self.particles.append(product[i % len(product)])
+
         "*** YOUR CODE HERE ***"
         #raiseNotDefined()
 
