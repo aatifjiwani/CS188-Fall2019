@@ -17,6 +17,7 @@ import random
 import busters
 import game
 
+
 from util import manhattanDistance, raiseNotDefined
 
 
@@ -332,12 +333,12 @@ class ExactInference(InferenceModule):
             # for inc in increments:
             #     newPos, valid = isValid(pos, inc)
             #     if (valid):
-            #         
+            #
 
         self.beliefs = distribution
 
 
-        
+
 
     def getBeliefDistribution(self):
         return self.beliefs
@@ -391,21 +392,27 @@ class ParticleFilter(InferenceModule):
         for particle in self.particles:
             prob = self.getObservationProb(observation, gameState.getPacmanPosition(), particle, self.getJailPosition())
             newDist[particle] = prob*currentBeliefs[particle]
-        
+
         if (newDist.total() == 0):
             self.initializeUniformly(gameState)
         else:
             self.particles = []
             for _ in range(self.numParticles):
                 self.particles.append(newDist.sample())
-        
+
     def elapseTime(self, gameState):
         """
         Sample each particle's next state based on its current state and the
         gameState.
         """
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+        elapsedParticles = []
+        for p in range(self.numParticles):
+            newPosDist = self.getPositionDistribution(gameState, self.particles[p])
+            currParticle = newPosDist.sample()
+            elapsedParticles.append(currParticle)
+        self.particles = elapsedParticles
+
 
     def getBeliefDistribution(self):
         """
