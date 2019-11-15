@@ -390,6 +390,8 @@ class ParticleFilter(InferenceModule):
         currentBeliefs = self.getBeliefDistribution()
         newDist = DiscreteDistribution()
         for particle in self.particles:
+            print("p", particle)
+            print("j", self.getJailPosition())
             prob = self.getObservationProb(observation, gameState.getPacmanPosition(), particle, self.getJailPosition())
             newDist[particle] = prob*currentBeliefs[particle]
 
@@ -500,16 +502,17 @@ class JointParticleFilter(ParticleFilter):
         newDist = DiscreteDistribution()
         for particle in self.particles:
             product = 1
-            print(particle)
+            #print(particle)
             for i in range(self.numGhosts):
-                ghostPos = particle[i]
-                ghostJail = self.getJailPosition(i)
-                print(self.getObservationProb(observation, gameState.getPacmanPosition(), ghostPos, ghostJail))
+                product = product * self.getObservationProb(observation[i], gameState.getPacmanPosition(), \
+                    particle[i], self.getJailPosition(i))
+                # print("p", ghostPos)
+                # print("j", ghostJail)
+                # print("o", observation)
+                # print(self.getObservationProb(observation[i], gameState.getPacmanPosition(), ghostPos, ghostJail)
+                
 
-                # product = product * self.getObservationProb(observation, gameState.getPacmanPosition(), \
-                    #particle[i], self.getJailPosition(i))
-
-            print("hello")
+            # print("hello")
             newDist[particle] = product*currentBeliefs[particle]
 
         if (newDist.total() == 0):
@@ -525,15 +528,20 @@ class JointParticleFilter(ParticleFilter):
         Sample each particle's next state based on its current state and the
         gameState.
         """
+        # elapsedParticles = []
+        # for p in range(self.numParticles):
+        #     newPosDist = self.getPositionDistribution(gameState, self.particles[p])
+        #     currParticle = newPosDist.sample()
+        #     elapsedParticles.append(currParticle)
+        # self.particles = elapsedParticles
+
         newParticles = []
         for oldParticle in self.particles:
             newParticle = list(oldParticle)  # A list of ghost positions
 
             # now loop through and update each entry in newParticle...
-            "*** YOUR CODE HERE ***"
-            raiseNotDefined()
-
-            """*** END YOUR CODE HERE ***"""
+            
+            
             newParticles.append(tuple(newParticle))
         self.particles = newParticles
 
