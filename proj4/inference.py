@@ -500,6 +500,7 @@ class JointParticleFilter(ParticleFilter):
         "*** YOUR CODE HERE ***"
         currentBeliefs = self.getBeliefDistribution()
         newDist = DiscreteDistribution()
+        pacman = gameState.getPacmanPosition()
         for particle in self.particles:
             product = 1
             #print(particle)
@@ -510,7 +511,7 @@ class JointParticleFilter(ParticleFilter):
                 # print("j", ghostJail)
                 # print("o", observation)
                 # print(self.getObservationProb(observation[i], gameState.getPacmanPosition(), ghostPos, ghostJail)
-                
+
 
             # print("hello")
             newDist[particle] = product*currentBeliefs[particle]
@@ -538,10 +539,9 @@ class JointParticleFilter(ParticleFilter):
         newParticles = []
         for oldParticle in self.particles:
             newParticle = list(oldParticle)  # A list of ghost positions
-
-            # now loop through and update each entry in newParticle...
-            
-            
+            for i in range(self.numGhosts):
+                newPosDist = self.getPositionDistribution(gameState, prevGhostPositions, i, self.ghostAgents[i])
+                newParticle[i] = newPosDist.sample()
             newParticles.append(tuple(newParticle))
         self.particles = newParticles
 
