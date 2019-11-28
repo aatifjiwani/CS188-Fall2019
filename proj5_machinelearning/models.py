@@ -27,6 +27,7 @@ class PerceptronModel(object):
         Returns: a node containing a single number (the score)
         """
         "*** YOUR CODE HERE ***"
+        return nn.DotProduct(self.w, x)
 
     def get_prediction(self, x):
         """
@@ -35,12 +36,31 @@ class PerceptronModel(object):
         Returns: 1 or -1
         """
         "*** YOUR CODE HERE ***"
+        score = nn.as_scalar(self.run(x))
+        if (score >= 0):
+            return 1
+        
+        return -1
 
     def train(self, dataset):
         """
         Train the perceptron until convergence.
         """
         "*** YOUR CODE HERE ***"
+        numUpdates = 0
+        firstPass = True
+        while (numUpdates == 0):
+            firstPass = False
+            for x,y in dataset.iterate_once(1):
+                pred = self.get_prediction(x)
+                if (pred != nn.as_scalar(y)):
+                    self.w.update(x, nn.as_scalar(y)) 
+                    numUpdates = numUpdates + 1
+
+            if(numUpdates == 0):
+                break
+
+            numUpdates = 0
 
 class RegressionModel(object):
     """
@@ -51,6 +71,23 @@ class RegressionModel(object):
     def __init__(self):
         # Initialize your model parameters here
         "*** YOUR CODE HERE ***"
+        self.w1 = nn.Parameter(1, 150)
+        self.b1 = nn.Parameter(1, 150)
+
+        self.w2 = nn.Parameter(150, 150)
+        self.b2 = nn.Parameter(1, 150)
+
+        self.wOutput = nn.Parameter(150, 1)
+        self.bOutput = nn.Parameter(1, 1)
+
+        self.layers = [  #(Weights, Bias, Activation function)
+            (self.w1, self.b1, nn.ReLU),
+            (self.w2, self.b2, nn.ReLU),
+            (self.wOutput, self.bOutput, None)
+        ]
+
+        self.listOfParams = [param for layer in self.layers for param in list(layer)[:2]]
+        self.alpha = 0.01
 
     def run(self, x):
         """
@@ -62,6 +99,18 @@ class RegressionModel(object):
             A node with shape (batch_size x 1) containing predicted y-values
         """
         "*** YOUR CODE HERE ***"
+        currentLayer = x
+        for layer in self.layers:
+            weight, bias, fn = layer
+            z_noBias = nn.Linear(currentLayer, weight)
+            z = nn.AddBias(z_noBias, bias)
+            if (fn != None):
+                z = fn(z)
+
+            currentLayer = z
+        
+        return currentLayer
+
 
     def get_loss(self, x, y):
         """
@@ -74,12 +123,25 @@ class RegressionModel(object):
         Returns: a loss node
         """
         "*** YOUR CODE HERE ***"
+        pred_y = self.run(x)
+        return nn.SquareLoss(pred_y, y)
 
     def train(self, dataset):
         """
         Trains the model.
         """
         "*** YOUR CODE HERE ***"
+        for x,y in dataset.iterate_forever(100):
+            loss = self.get_loss(x, y)
+            print(nn.as_scalar(loss))
+            gradients = nn.gradients(loss, self.listOfParams)
+
+            for param, grad in zip(self.listOfParams, gradients):
+                param.update(grad, 0-self.alpha)
+
+            if (nn.as_scalar(loss) < 0.01):
+                break
+
 
 class DigitClassificationModel(object):
     """
