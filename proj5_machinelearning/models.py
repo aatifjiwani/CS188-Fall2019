@@ -160,6 +160,30 @@ class DigitClassificationModel(object):
     def __init__(self):
         # Initialize your model parameters here
         "*** YOUR CODE HERE ***"
+        self.alpha = 0.01
+        self.epochs = 10
+        self.batch_size = 30
+
+        self.w1 = nn.Parameter(784, 350)
+        self.b1 = nn.Parameter(1, 350)
+
+        self.w2 = nn.Parameter(350, 200)
+        self.b2 = nn.Parameter(1, 200)
+
+        self.w3 = nn.Parameter(200, 100)
+        self.b3 = nn.Parameter(1, 100)
+
+        self.wOutput = nn.Parameter(100, 10)
+        self.bOutput = nn.Parameter(1, 10)
+
+        self.layers = [
+            (self.w1, self.b1, nn.ReLU),
+            (self.w2, self.b2, nn.ReLU),
+            (self.w3, self.b3, None),
+            (self.wOutput, None, None)
+        ]
+
+        self.parameters = [param for layer in self.layers for param in list(layer)[:2] if param != None]
 
     def run(self, x):
         """
@@ -176,6 +200,20 @@ class DigitClassificationModel(object):
                 (also called logits)
         """
         "*** YOUR CODE HERE ***"
+        currentLayer = x
+        for layer in self.layers:
+            weight, bias, fn = layer
+            z = nn.Linear(currentLayer, weight)
+
+            if (bias != None):
+                z = nn.AddBias(z, bias)
+
+            if (fn != None):
+                z = fn(z)
+
+            currentLayer = z
+        
+        return currentLayer
 
     def get_loss(self, x, y):
         """
@@ -191,12 +229,29 @@ class DigitClassificationModel(object):
         Returns: a loss node
         """
         "*** YOUR CODE HERE ***"
+        pred_y = self.run(x)
+        return nn.SoftmaxLoss(pred_y, y)
 
     def train(self, dataset):
         """
         Trains the model.
         """
         "*** YOUR CODE HERE ***"
+        for epoch in range(0, self.epochs):
+            for x, y in dataset.iterate_once(self.batch_size):
+                loss = self.get_loss(x, y)
+                #print(nn.as_scalar(loss))
+                gradients = nn.gradients(loss, self.parameters)
+
+                for param, grad in zip(self.parameters, gradients):
+                    param.update(grad, 0-self.alpha)
+
+                print("epoch:", epoch, "loss for batch:", nn.as_scalar(loss))
+            
+            print("After finishing epoch", epoch+1, "/", self.epochs, \
+                "validation accuracy is:", dataset.get_validation_accuracy())
+
+
 
 class LanguageIDModel(object):
     """
